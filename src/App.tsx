@@ -1,5 +1,12 @@
 import React from 'react';
 
+interface Job {
+  ID: number;
+  Description: string;
+  MaxDate: string;
+  time: number;
+}
+
 const App: React.FC = () => {
   const jobs = [
     {
@@ -17,52 +24,34 @@ const App: React.FC = () => {
     {
       ID: 3,
       Description: 'Importação de dados de integração',
-      MaxDate: '2019-11-10 15:00:00',
+      MaxDate: '2019-11-11 8:00:00',
       time: 6,
     },
     {
       ID: 4,
       Description: 'Importação de dados da Base Legada',
       MaxDate: '2019-11-11 19:00:00',
-      time: 23,
+      time: 16,
     },
   ];
-  const resposta: number[][] = [[]];
+
   const tempoMaximo = 8;
   const inicioJanelaExecucao = new Date('2019-11-10 09:00:00');
   const fimJanelaExecucao = new Date('2019-11-11 12:00:00');
 
-  // function verificaDataMaximaJob() { }
+  const resposta: number[][] = [[]];
+  let indiceResposta = 0;
+  let contadorTempoExecucao = 0;
+  let tempoExecucaoDaJanela = inicioJanelaExecucao;
 
-  // function verificaFinalJanelaExecucao() { }
-
-  function addDays(date: Date, horas: number) {
+  // soma as horas da janela de execução
+  function adicionaHoras(date: Date, horas: number) {
     const result = new Date(date);
     result.setHours(result.getHours() + horas);
     return result;
   }
 
-  jobs.sort((a, b) => {
-    const dateA = +new Date(a.MaxDate);
-    const dateB = +new Date(b.MaxDate);
-    return dateA - dateB;
-  });
-
-  let indiceResposta = 0;
-  let contadorTempoExecucao = 0;
-  let tempoExecucaoDaJanela = inicioJanelaExecucao;
-  jobs.map(job => {
-    // eslint-disable-next-line no-debugger
-    debugger;
-    tempoExecucaoDaJanela = addDays(tempoExecucaoDaJanela, job.time);
-    console.log(tempoExecucaoDaJanela);
-    if (tempoExecucaoDaJanela > fimJanelaExecucao) {
-      return resposta;
-    }
-
-    if (tempoExecucaoDaJanela > new Date(job.MaxDate)) {
-      return resposta;
-    }
+  function realizaAgendamento(job: Job) {
     contadorTempoExecucao += job.time;
 
     if (contadorTempoExecucao > tempoMaximo) {
@@ -72,6 +61,29 @@ const App: React.FC = () => {
     } else {
       resposta[indiceResposta].push(job.ID);
     }
+  }
+
+  jobs.sort((a, b) => {
+    const dateA = +new Date(a.MaxDate);
+    const dateB = +new Date(b.MaxDate);
+    return dateA - dateB;
+  });
+
+  jobs.map(job => {
+    tempoExecucaoDaJanela = adicionaHoras(tempoExecucaoDaJanela, job.time);
+
+    // Todos os Jobs devem ser executados dentro da janela de execução
+    if (tempoExecucaoDaJanela > fimJanelaExecucao) {
+      return resposta;
+    }
+
+    // Deve ser respeitada a data máxima de conclusão do Job;
+    const dataMaximaJob = new Date(job.MaxDate);
+    if (tempoExecucaoDaJanela > dataMaximaJob) {
+      return resposta;
+    }
+
+    realizaAgendamento(job);
 
     return resposta;
   });
